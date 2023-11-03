@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    qDebug()<<"___________________________________"
+            <<"\n\t-Load mainWindow"
+            <<"\n___________________________________\n\n\n";
     ui->setupUi(this);
     rex.setPattern("\\r\\n|\\r|\\n");
     //list with all users
@@ -32,23 +35,35 @@ MainWindow::~MainWindow()
 // Import ports from usb
 void MainWindow::importPorts()
 {
+    qDebug()<<"-------------"
+            <<"\n-importPorts";
+
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &portInfo : serialPortInfos)
     {
-        qDebug() << "\n"
-                << "Port:" << portInfo.portName() << "\n";
+        qDebug()<< "Port:" << portInfo.portName() << "\n";
         ui->cbComPorts->addItem(portInfo.portName());
-        //->addItem(portInfo.portName());
+
     }
+
+    if(ui->cbComPorts->currentText().isEmpty())
+        qWarning()<<"\n-----COM PORT IS EMPTY!----\n";
+
+
+    qDebug()<<"\n-importPorts - Complete"
+            << "\n-------------\n\n\n";
 
 }
 //-----------------------------------------------
 // add new User
 void MainWindow::addUser(User* user)
 {
+    qDebug()<<"-------------"
+            <<"\n-addUser";
         int row = ui->tableUsersWidget->rowCount();
         ui->tableUsersWidget->insertRow(ui->tableUsersWidget->rowCount());
         ui->tableUsersWidget->setRowCount(row+1);
+
         QTableWidgetItem *userItem;
         userItem = new QTableWidgetItem(user->FirstName);
         ui->tableUsersWidget->setItem(row, 0, userItem);
@@ -66,11 +81,19 @@ void MainWindow::addUser(User* user)
                 <<"\nPatronymic: "<<user->Patronymic
                 << "\nCardID:    "<<user->CardID;
 
+        qDebug()<<"\n-addUser - Complete"
+                << "\n-------------\n\n\n";
+
 }
 //-----------------------------------------------
 // check last openned users
 void MainWindow::updateLastUsers(QString CardID, QDateTime dateTime)
 {
+    qDebug()<<"-------------"
+            <<"\n-updateLastUsers"
+            <<"\n-CardId: "<< CardID
+            <<"\n-Date: "<<dateTime;
+
     int rows = ui->tableUsersWidget->rowCount();
     QString fullName = "";
 
@@ -100,13 +123,19 @@ void MainWindow::updateLastUsers(QString CardID, QDateTime dateTime)
         ui->lastUserTable->setItem(row, 2, userItem);
 
     }
-
+    qDebug()
+            <<"\n-updateLastUsers - Complete"
+            <<"\n-------------\n\n\n";
 
 }
 //_______________________________________________
 // find cardId in UsersTable
 bool MainWindow::findCardIDTable(QString ID)
 {
+    qDebug()<<"-------------"
+            <<"\n-findCardIDTable"
+            <<"\n-CardId: "<< ID;
+
     int rows = ui->tableUsersWidget->rowCount();
     bool found = false;
     for(int i = 0; i < rows; ++i)
@@ -118,6 +147,10 @@ bool MainWindow::findCardIDTable(QString ID)
             break;
         }
     }
+    qDebug()<<"\n-isFind?: "
+            <<found
+            <<"\n-findCardIDTable - Complete"
+            <<"\n-------------\n\n\n";
     return found;
 }
 //_______________________________________________
@@ -129,14 +162,25 @@ bool MainWindow::findCardIDTable(QString ID)
 // Connect to ports
 void MainWindow::slotConnectComPort()
 {
+    qDebug()<<"-------------"
+            <<"\n-slotConnectComPort";
 
-    serial.setPort(QSerialPortInfo(ui->cbComPorts->currentText()));
+    // ---Settings SerialPort
+    serial.setPort(QSerialPortInfo(ui->cbComPorts->currentText())); //Set name Port
+    serial.setBaudRate(QSerialPort::Baud9600); // Set speed data
+    serial.open(QIODevice::ReadWrite); // Open Port
+    if(!serial.isOpen())
+    {
+         QMessageBox::warning(this, "Error Connect", "Error connect to COM Port" + serial.errorString(),QMessageBox::Ok);
+         qWarning()<<"\nqWarning(): "<<"Error connect to COM Port:\n"<<serial.errorString();
+         return;
+    }
+    connect(&serial, &QSerialPort::readyRead, this, &MainWindow::slotGetDataFromCom);
+
     ui->cbComPorts->setEnabled(false);
     ui->butConnect->setText(tr("Disconnect"));
-    serial.setBaudRate(QSerialPort::Baud9600); // Установите скорость передачи данных
-    serial.open(QIODevice::ReadWrite); // Откройте последовательный порт
-    connect(&serial, &QSerialPort::readyRead, this, &MainWindow::slotGetDataFromCom);
-    //portIsConnected = true;
+    qDebug()<<"\n+Complete"
+            <<"\n-------------\n\n\n";
 }
 
 
@@ -144,6 +188,8 @@ void MainWindow::slotConnectComPort()
 // Get data from Com port
 void MainWindow::slotGetDataFromCom()
 {
+    qDebug()<<"-------------"
+            <<"\n-slotGetDataFromCom";
     QByteArray data = serial.readAll();
     QString line = QString::fromStdString(data.toStdString());
 
@@ -160,21 +206,25 @@ void MainWindow::slotGetDataFromCom()
                 listCardID.append(paramString);
                 if(findCardIDTable(paramString))
                 {
+                    qDebug()<<"+CardId found";
                     ui->statusLabel->setText("Открыто!");
                     updateLastUsers(paramString, QDateTime::currentDateTime());
                     QTimer::singleShot(3000,this,[=]{ui->statusLabel->setText("Закрыто");});
                 }
 
-                qDebug()<<"result: "<<paramString;
+                qDebug()<<"-Arduino Message: "<<paramString;
             }
         }
-
     }
+    qDebug()<<"\n+slotGetDataFromCom - Complete"
+            <<"\n-------------\n\n\n";
 }
 //-----------------------------------------------
 // Register CardID User
 void MainWindow::slotRegisterCardID()
 {
+    qDebug()<<"-------------"
+            <<"\n-slotRegisterCardID";
     if(!serial.isOpen())
         QMessageBox::warning(this, "Error Connect", "Error connect to COM Port" + serial.errorString(),QMessageBox::Ok);
     else
@@ -187,13 +237,18 @@ void MainWindow::slotRegisterCardID()
             if(RegCard->user)
             {
                 addUser(RegCard->user);
+                qDebug()<<"RegCard has user \n-printUsers";
                 users->printUsers();
             }
+            else
+                qWarning()<<"\n---user in RegCard == nullptr!";
             this->slotConnectComPort();
         }
         );
         //RegCard->serialPort.setPort(QSerialPortInfo(ui->cbComPorts->currentText()));
     }
+    qDebug()<<"\n-slotRegisterCardID - Complete"
+            <<"\n-------------\n\n\n";
 
     // RegCard->exec();
 }

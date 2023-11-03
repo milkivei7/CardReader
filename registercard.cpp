@@ -14,11 +14,18 @@ RegisterCard::RegisterCard(QWidget *parent, QString portName):
     QDialog(parent),
     ui(new Ui::RegisterCard)
 {
-    ui->setupUi(this);
+    qDebug()<<"\n---------------------------------------------------"
+            <<"\n\t-RegisterCard"
+            <<"\n---------------------------------------------------\n\n";
+
+    ui->setupUi(this);                  //set ui
     ui->editCardID->setReadOnly(true);
     rex.setPattern("\\r\\n|\\r|\\n");
 
-    qDebug()<<"Установка Порта "<<portName;
+    qDebug()<<"\n--------"
+            <<"+Set port name: "
+            <<portName
+            <<"\n--------\n\n\n";
     serialPort.setPort(QSerialPortInfo(portName));
     serialPort.setBaudRate(QSerialPort::Baud9600); // Установите скорость передачи данных
     serialPort.open(QIODevice::ReadWrite); // Откройте последовательный порт
@@ -42,6 +49,7 @@ RegisterCard::~RegisterCard()
 
 void RegisterCard::slotGetCardID()
 {
+    qDebug()<<"\n\n-slotGetCardID";
     QByteArray data = serialPort.readAll();
     QString line = QString::fromStdString(data.toStdString());
     line = line.remove(rex);
@@ -58,12 +66,12 @@ void RegisterCard::slotGetCardID()
                 if(!ui->editCardID->text().isEmpty())
                 {
                     ui->editCardID->setEnabled(false);
-                    qDebug()<<"Text in editLine "<<ui->editCardID->text();
+                    qDebug()<<"\n-Text in editLine: "<<ui->editCardID->text();
                 }
                 else
                 {
                     ui->editCardID->setEnabled(true);
-                    qDebug()<<"None text in EditLine ";
+                    qDebug()<<"\n-None text in EditLine ";
                 }
                 return;
                 //qDebug()<<"result: "<<paramString;
@@ -75,6 +83,7 @@ void RegisterCard::slotGetCardID()
 
 void RegisterCard::acceptDialog()
 {
+    qDebug()<<"\n\n-acceptDialog";
     if(ui->editName->text().isEmpty())
     {
         QMessageBox::warning(this, "ФИО пустое", "Заполните Фамилию Имя и Отчество!",QMessageBox::Ok);
@@ -92,6 +101,7 @@ void RegisterCard::acceptDialog()
 
 void RegisterCard::rejectDialog()
 {
+    qDebug()<<"\n\n-rejectDialog";
     serialPort.close();
     RegisterCard::reject();
 }

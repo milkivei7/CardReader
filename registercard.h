@@ -22,16 +22,16 @@ public:
     RegisterCard(QWidget *parent = nullptr, QString portName = "");
     ~RegisterCard();
 
-    QSerialPort serialPort;
-    User* user;
+    QSerialPort serialPort; //COM port for new open
+    User* user; // potentiality new user
 private:
     Ui::RegisterCard *ui;
-    QRegularExpression rex;
+    QRegularExpression rex; // regular for delete \n\r
 public slots:
-    void slotGetCardID();
+    void slotGetCardID(); //get CardID for registered
 private slots:
-    void acceptDialog();
-    void rejectDialog();
+    void acceptDialog(); //override
+    void rejectDialog();    //funcstions
 
 };
 

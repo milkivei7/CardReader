@@ -11,11 +11,12 @@ public:
     User(QString _FirstName = "", QString _LastName ="", QString _Patronymic="", QString _CardID="" );
 
 public:
+    //Info User
     QString FirstName, LastName, Patronymic, CardID;
 
 };
 
-
+//List all users at home
 class listUsers : public QObject
 {
     Q_OBJECT
@@ -24,10 +25,10 @@ public:
     QList<User*> listRegisterUsers;
 
 public:
-    void addUser(User*);
-    void printUsers();
+    void addUser(User*); // add user to list and emit signal????
+    void printUsers(); // print all users
 signals:
-    void listRegisterAdded();
+    void listRegisterAdded(); // emit signal when add new user????
 };
 
 #endif // USER_H
