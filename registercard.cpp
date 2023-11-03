@@ -44,7 +44,6 @@ void RegisterCard::slotGetCardID()
 {
     QByteArray data = serialPort.readAll();
     QString line = QString::fromStdString(data.toStdString());
-
     line = line.remove(rex);
 
     if (!line.isEmpty())
